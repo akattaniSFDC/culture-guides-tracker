@@ -261,7 +261,7 @@ export default function LogActivityPage() {
                   name="eventName"
                   value={formData.eventName}
                   onChange={handleChange}
-                  placeholder="e.g., Innovation Showcase Q4"
+                  placeholder="e.g., Salesforce Adventure Club"
                   className={`h-14 text-lg liquid-glass border-2 transition-all duration-300 ${
                     errors.eventName ? "border-red-500" : "border-white/20 focus:border-orange-500"
                   }`}

@@ -93,7 +93,7 @@ export default function DashboardPage() {
           <CardHeader>
             <CardTitle className="text-4xl font-bold flex items-center gap-3">
               <Trophy className="w-10 h-10 text-yellow-500" />
-              Q4 2024 Leaderboard
+              2025 Leaderboard
             </CardTitle>
             <CardDescription className="text-lg">Celebrating our top Culture Guides contributors</CardDescription>
           </CardHeader>

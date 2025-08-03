@@ -26,8 +26,10 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 dark:from-slate-950 dark:via-blue-950 dark:to-purple-950">
-          {children}
+        <div className="min-h-screen bg-gray-100 relative">
+          <div className="relative z-10">
+            {children}
+          </div>
         </div>
       </body>
     </html>

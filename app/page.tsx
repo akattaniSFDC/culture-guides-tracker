@@ -9,7 +9,8 @@ import HomePage from "@/components/pages/HomePage"
 import LogActivityPage from "@/components/pages/LogActivityPage"
 import DashboardPage from "@/components/pages/DashboardPage"
 import ResourcesPage from "@/components/pages/ResourcesPage"
-import BackgroundEffects from "@/components/ui/BackgroundEffects"
+
+import LoadingSpinner from "@/components/ui/LoadingSpinner"
 
 // Mock Data
 const leaderboardData = [
@@ -160,7 +161,7 @@ const LandingPage = ({ onNavigate }: { onNavigate: (page: string) => void }) => 
     </div>
 
     {/* Program Overview */}
-    <Card className="bg-gradient-to-br from-background via-background to-muted/20 backdrop-blur-sm border-0 shadow-2xl p-8 md:p-12">
+    <Card className="bg-white border border-gray-200 shadow-lg p-8 md:p-12">
       <CardHeader className="text-center">
         <CardTitle className="text-3xl font-bold">How It Works</CardTitle>
         <CardDescription className="text-lg max-w-xl mx-auto">
@@ -172,7 +173,7 @@ const LandingPage = ({ onNavigate }: { onNavigate: (page: string) => void }) => 
           {activityTypes.map((activity) => (
             <Card
               key={activity.id}
-              className="bg-gradient-to-br from-background via-background to-muted/20 backdrop-blur-sm border-0 shadow-2xl p-6 transform hover:-translate-y-2 transition-transform duration-300 group"
+              className="bg-white border border-gray-200 shadow-md p-6 transform hover:-translate-y-2 transition-transform duration-300 group"
             >
               <CardContent className="pt-6">
                 <div
@@ -197,20 +198,19 @@ const LandingPage = ({ onNavigate }: { onNavigate: (page: string) => void }) => 
 // Main App Component
 export default function CultureGuidesApp() {
   const [activeTab, setActiveTab] = useState("home")
-  const [theme, setTheme] = useState("light")
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem("theme") || "light"
-    setTheme(savedTheme)
-    document.documentElement.classList.toggle("dark", savedTheme === "dark")
+    // Ensure light mode is always active
+    document.documentElement.classList.remove("dark")
+    
+    // Simulate loading time
+    const timer = setTimeout(() => {
+      setIsLoading(false)
+    }, 2500)
+    
+    return () => clearTimeout(timer)
   }, [])
-
-  const toggleTheme = () => {
-    const newTheme = theme === "light" ? "dark" : "light"
-    setTheme(newTheme)
-    localStorage.setItem("theme", newTheme)
-    document.documentElement.classList.toggle("dark", newTheme === "dark")
-  }
 
   const renderPage = () => {
     switch (activeTab) {
@@ -227,11 +227,13 @@ export default function CultureGuidesApp() {
     }
   }
 
-  return (
-    <div className="min-h-screen relative overflow-hidden">
-      <BackgroundEffects />
+  if (isLoading) {
+    return <LoadingSpinner />
+  }
 
-      <Header activeTab={activeTab} onTabChange={setActiveTab} theme={theme} onThemeToggle={toggleTheme} />
+  return (
+    <div className="min-h-screen relative overflow-hidden bg-gray-100">
+      <Header activeTab={activeTab} onTabChange={setActiveTab} />
 
       <main className="relative z-10">
         <AnimatePresence mode="wait">
