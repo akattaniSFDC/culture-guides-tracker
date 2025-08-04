@@ -4,7 +4,8 @@ import { googleSheetsService } from "@/lib/google-sheets"
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
+    // Use NextRequest.nextUrl instead of request.url for better compatibility
+    const { searchParams } = request.nextUrl
     const type = searchParams.get('type') // 'activities' or 'leaderboard'
     const limitParam = searchParams.get('limit') || '100'
     
