@@ -15,5 +15,8 @@
         "**/.settings": true,
         "**/.exchange_modules_tmp": true,
         ".mule": true
-    }
+    },
+    "java.project.sourcePaths": [
+        "public"
+    ]
 }

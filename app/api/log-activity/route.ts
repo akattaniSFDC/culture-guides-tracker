@@ -1,29 +1,36 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { google } from "googleapis"
 import { WebClient } from "@slack/web-api"
+import { googleSheetsService } from "@/lib/google-sheets"
+import { localStorageService } from "@/lib/local-storage"
 
 const slack = new WebClient(process.env.SLACK_BOT_TOKEN)
 
-async function getGoogleSheetsClient() {
-  const auth = new google.auth.GoogleAuth({
-    credentials: {
-      client_email: process.env.GOOGLE_SHEETS_CLIENT_EMAIL,
-      private_key: process.env.GOOGLE_SHEETS_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-    },
-    scopes: ["https://www.googleapis.com/auth/spreadsheets"],
-  })
-
-  return google.sheets({ version: "v4", auth })
-}
-
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
+    let body
+    try {
+      body = await request.json()
+    } catch (error) {
+      return NextResponse.json({ error: "Invalid JSON payload" }, { status: 400 })
+    }
+
     const { role, eventName, eventDate, name, slackHandle, notes, notifyManager } = body
 
     // Validate required fields
     if (!role || !eventName || !eventDate || !name || !slackHandle) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
+      return NextResponse.json({ 
+        error: "Missing required fields",
+        required: ["role", "eventName", "eventDate", "name", "slackHandle"]
+      }, { status: 400 })
+    }
+
+    // Validate role is a valid option
+    const validRoles = ["project-manager", "committee-member", "on-site-help"]
+    if (!validRoles.includes(role)) {
+      return NextResponse.json({ 
+        error: "Invalid role",
+        validRoles
+      }, { status: 400 })
     }
 
     // Get points for the role
@@ -34,80 +41,100 @@ export async function POST(request: NextRequest) {
     }
     const points = pointsMap[role] || 0
 
-    // Log to Google Sheets
-    const sheets = await getGoogleSheetsClient()
-    const timestamp = new Date().toISOString()
-
-    await sheets.spreadsheets.values.append({
-      spreadsheetId: process.env.GOOGLE_SHEETS_SHEET_ID,
-      range: "Activities!A:H",
-      valueInputOption: "USER_ENTERED",
-      requestBody: {
-        values: [[timestamp, name, slackHandle, role, eventName, eventDate, points, notes || ""]],
-      },
-    })
-
-    // Send Slack notification
-    const roleLabels: Record<string, string> = {
-      "project-manager": "Project Manager",
-      "committee-member": "Committee Member",
-      "on-site-help": "On-site Help",
+    // Log activity - try Google Sheets first, fallback to local storage
+    const activityData = {
+      name,
+      slackHandle,
+      role,
+      eventName,
+      eventDate,
+      points,
+      notes,
     }
 
-    const slackMessage = {
-      channel: process.env.SLACK_CHANNEL_ID,
-      text: `🎉 New Culture Guides Activity Logged!`,
-      blocks: [
-        {
-          type: "header",
-          text: {
-            type: "plain_text",
-            text: "🎉 New Culture Guides Activity!",
-          },
-        },
-        {
-          type: "section",
-          fields: [
+    try {
+      // Try Google Sheets if it's configured
+      if (googleSheetsService.isGoogleSheetsConfigured()) {
+        await googleSheetsService.logActivity(activityData)
+        console.log('✅ Logged to Google Sheets')
+      } else {
+        throw new Error('Google Sheets not configured, using local storage')
+      }
+    } catch (error) {
+      console.log('⚠️  Google Sheets not available, using local storage:', error instanceof Error ? error.message : String(error))
+      // Fallback to local storage
+      await localStorageService.logActivity(activityData)
+    }
+
+    // Send Slack notification (optional)
+    if (process.env.SLACK_BOT_TOKEN && process.env.SLACK_CHANNEL_ID) {
+      try {
+        const roleLabels: Record<string, string> = {
+          "project-manager": "Project Manager",
+          "committee-member": "Committee Member",
+          "on-site-help": "On-site Help",
+        }
+
+        const slackMessage = {
+          channel: process.env.SLACK_CHANNEL_ID,
+          text: `🎉 New Culture Guides Activity Logged!`,
+          blocks: [
             {
-              type: "mrkdwn",
-              text: `*Name:* ${name}`,
+              type: "header",
+              text: {
+                type: "plain_text",
+                text: "🎉 New Culture Guides Activity!",
+              },
             },
             {
-              type: "mrkdwn",
-              text: `*Slack:* ${slackHandle}`,
-            },
-            {
-              type: "mrkdwn",
-              text: `*Role:* ${roleLabels[role]}`,
-            },
-            {
-              type: "mrkdwn",
-              text: `*Points Earned:* ${points} 🌟`,
-            },
-            {
-              type: "mrkdwn",
-              text: `*Event:* ${eventName}`,
-            },
-            {
-              type: "mrkdwn",
-              text: `*Date:* ${eventDate}`,
+              type: "section",
+              fields: [
+                {
+                  type: "mrkdwn",
+                  text: `*Name:* ${name}`,
+                },
+                {
+                  type: "mrkdwn",
+                  text: `*Slack:* ${slackHandle}`,
+                },
+                {
+                  type: "mrkdwn",
+                  text: `*Role:* ${roleLabels[role]}`,
+                },
+                {
+                  type: "mrkdwn",
+                  text: `*Points Earned:* ${points} 🌟`,
+                },
+                {
+                  type: "mrkdwn",
+                  text: `*Event:* ${eventName}`,
+                },
+                {
+                  type: "mrkdwn",
+                  text: `*Date:* ${eventDate}`,
+                },
+              ],
             },
           ],
-        },
-      ],
-    }
+        }
 
-    if (notes) {
-      slackMessage.blocks.push({
-        type: "section",
-        text: {
-          type: "mrkdwn",
-          text: `*Notes:* ${notes}`,
-        },
-      })
-    }
+        if (notes) {
+          slackMessage.blocks.push({
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text: `*Notes:* ${notes}`,
+            },
+          })
+        }
 
-    await slack.chat.postMessage(slackMessage)
+        await slack.chat.postMessage(slackMessage)
+        console.log('✅ Slack notification sent')
+      } catch (error) {
+        console.log('⚠️  Slack notification failed:', error instanceof Error ? error.message : String(error))
+        // Don't fail the request if Slack fails
+      }
+    }
 
     return NextResponse.json({
       success: true,
@@ -116,6 +143,20 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error("Error logging activity:", error)
-    return NextResponse.json({ error: "Failed to log activity" }, { status: 500 })
+    
+    // Return different error messages based on error type
+    if (error instanceof Error) {
+      if (error.message.includes('environment variable')) {
+        return NextResponse.json({ 
+          error: "Configuration error", 
+          message: "Service not properly configured"
+        }, { status: 503 })
+      }
+    }
+    
+    return NextResponse.json({ 
+      error: "Internal server error",
+      message: "Failed to log activity. Please try again later."
+    }, { status: 500 })
   }
 }

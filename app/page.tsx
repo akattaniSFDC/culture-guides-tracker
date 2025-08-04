@@ -139,7 +139,7 @@ const LandingPage = ({ onNavigate }: { onNavigate: (page: string) => void }) => 
       <div className="relative z-10">
         <div className="mb-8">
           <img
-            src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Culture%20Guides%20logo%20white%20%282%29-HDRMscbYVzAzn6iCthOBMgdtnObHV0.png"
+            src="/culture-guides-logo-white.png"
             alt="Culture Guides Logo"
             className="h-24 w-24 mx-auto mb-6 drop-shadow-2xl"
           />
@@ -201,9 +201,6 @@ export default function CultureGuidesApp() {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Ensure light mode is always active
-    document.documentElement.classList.remove("dark")
-    
     // Simulate loading time
     const timer = setTimeout(() => {
       setIsLoading(false)
@@ -217,7 +214,7 @@ export default function CultureGuidesApp() {
       case "home":
         return <HomePage onNavigate={setActiveTab} />
       case "log-activity":
-        return <LogActivityPage />
+        return <LogActivityPage onNavigate={setActiveTab} />
       case "dashboard":
         return <DashboardPage />
       case "resources":
@@ -232,10 +229,10 @@ export default function CultureGuidesApp() {
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-gray-100">
+    <div className="min-h-screen relative overflow-hidden bg-background">
       <Header activeTab={activeTab} onTabChange={setActiveTab} />
 
-      <main className="relative z-10">
+      <main className="relative z-10 bg-background">
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}

@@ -37,7 +37,11 @@ const activityTypes = [
   },
 ]
 
-export default function LogActivityPage() {
+interface LogActivityPageProps {
+  onNavigate: (page: string) => void
+}
+
+export default function LogActivityPage({ onNavigate }: LogActivityPageProps) {
   const [formData, setFormData] = useState({
     role: "",
     eventName: "",
@@ -51,6 +55,21 @@ export default function LogActivityPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [submissionResult, setSubmissionResult] = useState<any>(null)
+
+  const handleDismissSuccess = () => {
+    setIsSubmitted(false)
+    setFormData({
+      role: "",
+      eventName: "",
+      eventDate: "",
+      name: "",
+      slackHandle: "",
+      notes: "",
+      notifyManager: false,
+    })
+    setSubmissionResult(null)
+    onNavigate("dashboard")
+  }
 
   const validate = () => {
     const newErrors: Record<string, string> = {}
@@ -84,19 +103,7 @@ export default function LogActivityPage() {
       if (response.ok) {
         setSubmissionResult(result)
         setIsSubmitted(true)
-        setTimeout(() => {
-          setIsSubmitted(false)
-          setFormData({
-            role: "",
-            eventName: "",
-            eventDate: "",
-            name: "",
-            slackHandle: "",
-            notes: "",
-            notifyManager: false,
-          })
-          setSubmissionResult(null)
-        }, 5000)
+        // Remove auto-hide timeout - user will click OK button to dismiss
       } else {
         throw new Error(result.error || "Failed to submit")
       }
@@ -161,19 +168,30 @@ export default function LogActivityPage() {
                 <h2 className="text-4xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
                   Activity Logged Successfully!
                 </h2>
-                <p className="text-lg text-muted-foreground">
-                  Thank you for your contribution! Your points have been added to your account.
-                </p>
               </div>
 
               {submissionResult && (
                 <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 space-y-2">
                   <p className="text-2xl font-bold text-orange-500">+{submissionResult.points} Points Earned! 🌟</p>
                   <p className="text-sm text-muted-foreground">
-                    Your activity has been logged and the #cultureguides-global channel has been notified.
+                    Thank you for your contribution! Your manager has been notified and points are added towards your rockstar points.
                   </p>
                 </div>
               )}
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                className="mt-8"
+              >
+                <Button
+                  onClick={handleDismissSuccess}
+                  className="bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white px-8 py-3 rounded-full font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                >
+                  Continue
+                </Button>
+              </motion.div>
             </div>
           </motion.div>
         </div>
@@ -182,20 +200,20 @@ export default function LogActivityPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 min-h-screen">
       <div className="max-w-4xl mx-auto space-y-8">
         {/* Header */}
-        <div className="text-center space-y-4">
-          <h1 className="text-5xl font-bold bg-gradient-to-r from-orange-500 to-pink-500 bg-clip-text text-transparent">
+        <div className="text-center space-y-6">
+          <h1 className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-orange-500 to-pink-500 bg-clip-text text-transparent tracking-tight">
             Log Your Activity
           </h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
             Share your cultural contributions and earn points for making Salesforce an amazing place to work!
           </p>
         </div>
 
         {/* Form */}
-        <Card className="liquid-glass border-0 shadow-2xl p-8 md:p-12">
+        <Card className="liquid-glass border border-blue-500/20 shadow-2xl p-8 md:p-12 bg-card/80 dark:bg-card/70 backdrop-blur-md">
           <form onSubmit={handleSubmit} className="space-y-10">
             {/* Role Selection */}
             <div className="space-y-6">
@@ -220,7 +238,17 @@ export default function LogActivityPage() {
                       <div
                         className={`w-20 h-20 mx-auto rounded-2xl bg-gradient-to-r ${activity.gradient} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}
                       >
-                        <activity.icon className="w-10 h-10 text-white" />
+                        <activity.icon 
+                          className={`w-10 h-10 text-white transition-all duration-300 ${
+                            activity.id === 'project-manager' 
+                              ? 'group-hover:animate-spin-slow' 
+                              : activity.id === 'committee-member'
+                              ? 'group-hover:animate-bounce'
+                              : activity.id === 'on-site-help'
+                              ? 'group-hover:animate-heartbeat'
+                              : ''
+                          }`} 
+                        />
                       </div>
 
                       <div className="space-y-2">

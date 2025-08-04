@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Star, Users, Heart, Sparkles } from "lucide-react"
 import Image from "next/image"
+import GlareHover from "@/components/ui/GlareHover"
 
 interface HomePageProps {
   onNavigate: (page: string) => void
@@ -42,7 +43,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12 space-y-12 sm:space-y-24">
       {/* Hero Section */}
       <section className="relative">
-        <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-purple-900/95 via-blue-900/90 to-orange-900/95">
+        <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-blue-900/60 via-purple-900/50 to-indigo-900/60 backdrop-blur-sm border border-blue-500/20">
           {/* Content */}
           <div className="relative z-10 text-center py-12 sm:py-16 md:py-24 lg:py-32 px-4 sm:px-6 md:px-8">
             <motion.div
@@ -72,20 +73,43 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                   </span>
                 </h1>
 
-                <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-white/90 max-w-3xl mx-auto leading-relaxed px-2">
-                  Earn points, make an impact, and celebrate Salesforce culture through meaningful contributions.
+                <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-400 max-w-3xl mx-auto leading-relaxed px-2">
+                  Log activities . Earn points . Lead change
                 </p>
               </div>
 
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button
-                  onClick={() => onNavigate("log-activity")}
-                  size="lg"
-                  className="px-6 sm:px-8 md:px-12 py-3 sm:py-4 text-base sm:text-lg font-bold bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white rounded-full shadow-2xl border-0 backdrop-blur-sm"
+              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <GlareHover
+                  glareColor="#ffffff"
+                  glareOpacity={0.4}
+                  duration={0.8}
+                  className="rounded-xl"
                 >
-                  <Sparkles className="w-5 h-5 mr-2" />
-                  Start Logging Activities
-                </Button>
+                  <Button
+                    onClick={() => onNavigate("log-activity")}
+                    size="lg"
+                    className="relative overflow-hidden px-8 sm:px-12 md:px-16 py-4 sm:py-5 text-base sm:text-lg font-bold bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white rounded-xl shadow-2xl border-0 backdrop-blur-sm transition-all duration-300 group"
+                  >
+                    {/* Animated key press effect */}
+                    <motion.div
+                      className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"
+                      initial={{ y: "100%" }}
+                      whileHover={{ y: "0%" }}
+                      transition={{ duration: 0.2, ease: "easeOut" }}
+                    />
+                    
+                    {/* Key border effect */}
+                    <div className="absolute inset-0 border-2 border-white/30 rounded-xl group-hover:border-white/50 transition-colors duration-300" />
+                    
+                    {/* Button content */}
+                    <div className="relative z-10 flex items-center justify-center">
+                      <span className="tracking-wide">Start Now</span>
+                    </div>
+                    
+                    {/* Bottom shadow (key depth effect) */}
+                    <div className="absolute bottom-0 left-2 right-2 h-1 bg-black/20 rounded-b-xl transform group-hover:h-0.5 transition-all duration-200" />
+                  </Button>
+                </GlareHover>
               </motion.div>
             </motion.div>
           </div>
@@ -99,7 +123,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2 }}
         >
-          <Card className="liquid-glass border-0 shadow-2xl p-4 sm:p-6 md:p-8 lg:p-12">
+          <Card className="liquid-glass border border-blue-500/20 shadow-2xl p-4 sm:p-6 md:p-8 lg:p-12 bg-card/80 dark:bg-card/70 backdrop-blur-md">
             <CardHeader className="text-center space-y-4">
               <CardTitle className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-orange-500 to-pink-500 bg-clip-text text-transparent">
                 How It Works
@@ -120,13 +144,23 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                     transition={{ duration: 0.6, delay: 0.1 * index }}
                     whileHover={{ y: -10 }}
                   >
-                    <Card className="liquid-glass border-0 shadow-xl p-4 sm:p-6 md:p-8 text-center group hover:shadow-2xl transition-all duration-500">
+                    <Card className="liquid-glass border border-blue-500/10 shadow-xl p-4 sm:p-6 md:p-8 text-center group hover:shadow-2xl transition-all duration-500 bg-card/80 dark:bg-card/70 backdrop-blur-md hover:border-blue-400/30">
                       <CardContent className="pt-6 space-y-6">
                         {/* Icon */}
                         <div
                           className={`w-16 h-16 sm:w-18 sm:h-18 md:w-20 md:h-20 mx-auto rounded-2xl bg-gradient-to-r ${activity.gradient} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}
                         >
-                          <activity.icon className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 text-white" />
+                          <activity.icon 
+                            className={`w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 text-white transition-all duration-300 ${
+                              activity.id === 'project-manager' 
+                                ? 'group-hover:animate-spin-slow' 
+                                : activity.id === 'committee-member'
+                                ? 'group-hover:animate-bounce'
+                                : activity.id === 'on-site-help'
+                                ? 'group-hover:animate-heartbeat'
+                                : ''
+                            }`} 
+                          />
                         </div>
 
                         {/* Points */}
