@@ -9,6 +9,7 @@ import HomePage from "@/components/pages/HomePage"
 import LogActivityPage from "@/components/pages/LogActivityPage"
 import DashboardPage from "@/components/pages/DashboardPage"
 import ResourcesPage from "@/components/pages/ResourcesPage"
+import ChatbotPage from "@/components/pages/ChatbotPage"
 
 import LoadingSpinner from "@/components/ui/LoadingSpinner"
 
@@ -219,6 +220,8 @@ export default function CultureGuidesApp() {
         return <DashboardPage />
       case "resources":
         return <ResourcesPage />
+      case "chatbot":
+        return <ChatbotPage />
       default:
         return <HomePage onNavigate={setActiveTab} />
     }

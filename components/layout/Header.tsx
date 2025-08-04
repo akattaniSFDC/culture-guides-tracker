@@ -17,6 +17,7 @@ const navItems = [
   { id: "log-activity", label: "Log Activity" },
   { id: "dashboard", label: "Dashboard" },
   { id: "resources", label: "Resources & AI" },
+  { id: "chatbot", label: "AI Assistant" },
 ]
 
 export default function Header({ activeTab, onTabChange }: HeaderProps) {
