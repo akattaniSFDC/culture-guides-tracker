@@ -9,16 +9,36 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Sparkles, Play, SkipBack, SkipForward, Loader2, Send, Pause, Volume2, Mic, Bot, User, Headphones, Radio } from "lucide-react"
 
+interface Message {
+  type: 'user' | 'bot'
+  message: string
+}
+
+interface KnowledgeItem {
+  id: number
+  keywords: string[]
+  answer: string
+  suggestedQuestions: string[]
+}
+
+interface BotResponse {
+  answer: string
+  suggestedQuestions: string[]
+  type?: string
+  state?: string
+}
+
 export default function ResourcesPage() {
-  const [chatMessages, setChatMessages] = useState([
+  const [chatMessages, setChatMessages] = useState<Message[]>([
     {
       type: "bot",
-      message:
-        "Hi! I'm your Culture Guides AI assistant powered by NotebookLM. I can help you with event planning, culture initiatives, and answer questions about the program. How can I assist you today?",
+      message: "Hello! I'm the Culture Guide Assistant. I'm ready to answer your questions about event planning, rewards points, sustainability, and hub leads.",
     },
   ])
   const [inputMessage, setInputMessage] = useState("")
   const [isTyping, setIsTyping] = useState(false)
+  const [askedQuestions, setAskedQuestions] = useState<Set<string>>(new Set())
+  const [conversationState, setConversationState] = useState<string | null>(null)
   const [podcastData, setPodcastData] = useState<any>(null)
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState("0:00")
@@ -27,6 +47,191 @@ export default function ResourcesPage() {
   const [volume, setVolume] = useState(0.7)
   const [isMuted, setIsMuted] = useState(false)
   const audioRef = useRef<HTMLAudioElement>(null)
+
+  // Hub leads data
+  const hubLeads: Record<string, string> = {
+    'atlanta': '@Dwayne Benjamin',
+    'austin': '@Noel Martinez', 
+    'chicago': '@Lauren Prince',
+    'new york city': '@Clara Kobashigawa & @Noa Golden',
+    'nyc': '@Clara Kobashigawa & @Noa Golden',
+    'san francisco': '@Matt Facchin',
+    'seattle': '@Kaitlyn Cantrell',
+    'bellevue': '@Kaitlyn Cantrell',
+    'toronto': '@Nicole Cyhelka & @Akanksha Sharma',
+    'bbc': 'Lead Needed',
+    'boston': 'Lead Needed',
+    'burlington': 'Lead Needed',
+    'cambridge': 'Lead Needed',
+    'central florida': '@David Atkins',
+    'dallas': '@Natalie Millman',
+    'dc': '@Christine Jean & @Claudia Viscarra',
+    'denver': '@Julie Durrbeck',
+    'indy': '@Angi Grant',
+    'irvine': '@Mina Gendi & @Jenn Simonson',
+    'socal': '@Mina Gendi & @Jenn Simonson',
+    'mclean': '@Ana Febres',
+    'palo alto': '@Yobi Habtamu',
+    'south florida': '@Elizabeth Tejeda',
+    'raleigh': '@Blaire Rodgers',
+    'vancouver': '@Lisa Liu',
+    'brussels': '@Liesl Houben & @Samuel Alves Rosa',
+    'france': '@Isabelle Comte, @Ombeline Challet & @Marie-Charlotte de Jaurias',
+    'paris': '@Isabelle Comte, @Ombeline Challet & @Marie-Charlotte de Jaurias',
+    'berlin': '@Pierre Jerome Lisson',
+    'london': '@Yasmin Martin',
+    'milan': '@Sara Riggi, @Adele Brancadoro, @Mauro Enrico Recalcati, @Laura Valagussa @Luca Sangiorgi',
+    'amsterdam': '@Guus Paulusse',
+    'madrid': '@Rafael Escaño',
+    'zurich': '@Silvia Gönner & @Sophie Hunziker',
+    'dublin': '@Claire Rowley (Lead Needed)',
+    'stockholm': 'Lead Needed',
+    'israel': '@Becky Livshitz & @Ifat Schwartz',
+    'tel aviv': '@Becky Livshitz & @Ifat Schwartz',
+    'johannesburg': '@Janneke Henning',
+    'copenhagen': '@Sonia Blanco-Hansen & @Mari-louise Melchior',
+    'düsseldorf': '@Michael Schmitz & @Laura Zirkenbach',
+    'frankfurt': '@Philipp Sparwasser',
+    'jena': '@Björn Leonhardt',
+    'manheim': '@Daniel Wagner',
+    'casablanca': '@Amal Alahkam & @Soukaina Baiti',
+    'barcelona': '@Valeria Mina & @Dayana Peraza',
+    'manchester': '@Laura Ward, @Robert Reid @Dave Felcey',
+    'dubai': '@Maha Alaoui',
+    'buenos aires': '@Maria Sol Condoleo',
+    'bogota': '@Elkin Jonnatan Cordoba, @Nataly Quevedo, @Laura Garcia & @Alvaro Sevilla',
+    'colombia': '@Elkin Jonnatan Cordoba, @Nataly Quevedo, @Laura Garcia & @Alvaro Sevilla',
+    'mexico city': '@Christian Caballero',
+    'sao paulo': '@André de Souza @Cynthia Mastrodomenico',
+    'chile': '@Sebastián Fontana',
+    'medellín': '(Same as Colombia for now)',
+    'auckland': '@Renee Hinson (she/her/hers)',
+    'brisbane': '@Kylee Pinnow',
+    'canberra': '@Daniel Rushbrook',
+    'hyderabad': '@Raju Katta & @Anish Paul G',
+    'bangalore': '@Amarnath Kattani, REWS Support @Kiran Mondal',
+    'gurgaon': '@Richa Sharma & @Lalita Kandpal',
+    'jaipur': '@Neelabh Krishna & @Stuti Jain',
+    'pune': '@Bhavesh Dhamecha',
+    'singapore': '@Mamta Deshmukh & @Kai Hui Lim',
+    'sydney': '@Emma Waide',
+    'tokyo': '@Midori Tokioka',
+    'mumbai': 'Lead Needed',
+    'seoul': 'Lead Needed',
+    'melbourne': '@Jessica Wraith'
+  }
+
+  const regionLeads: Record<string, string> = {
+    'amer': '@Lauren Prince',
+    'emea': '@Steph Doel',
+    'latam': '@Melina Rochi (she/her)',
+    'india': '@Anshita Sharma',
+    'asean': '@Anshita Sharma',
+    'japan': '@Anshita Sharma',
+    'anz': '@Linda Huynh',
+    'korea': '@Linda Huynh',
+    'apac': '@Anshita Sharma (India, ASEAN & Japan) and @Linda Huynh (ANZ & Korea) are the leads for the APAC region.'
+  }
+
+  // Knowledge base
+  const knowledgeBase: KnowledgeItem[] = [
+    {
+      id: 1,
+      keywords: ['hi', 'hello', 'hey', 'start'],
+      answer: "Hello! I'm the Culture Guide Assistant. I'm ready to answer your questions about event planning, rewards points, sustainability, and hub leads.",
+      suggestedQuestions: ["What is the Culture Guides Program?", "Who is the Culture Guides Program Owner?", "Who is my hub lead?", "Who is my regional lead?"]
+    },
+    {
+      id: 2,
+      keywords: ['culture guides program', 'what is a culture guide', 'what is culture guides', 'purpose', 'mission'],
+      answer: "The Culture Guides Program is a global network of employees who bring Salesforce's unique culture to life. Their mission is to foster connection by amplifying marquee events and planning local activities.",
+      suggestedQuestions: ["How do I join?", "What is the time commitment?", "How are guides rewarded?"]
+    },
+    {
+      id: 3,
+      keywords: ['join', 'become a guide', 'sign up', 'apply'],
+      answer: "You can sign up via the 'Culture Guide Sign Up Form' workflow in the #cultureguides-global Slack channel. Remember, manager approval is mandatory!",
+      suggestedQuestions: ["What is the time commitment?", "What are the rewards?", "Is manager approval required?"]
+    },
+    {
+      id: 4,
+      keywords: ['time commitment', 'how much time', 'hours per month'],
+      answer: "The expected time commitment is roughly 2-4 hours per month. The role is a one-year term, starting in February.",
+      suggestedQuestions: ["How do I get points?", "What are my responsibilities?", "Who is my hub lead?"]
+    },
+    {
+      id: 5,
+      keywords: ['points', 'rewarded', 'rewards', 'recognition', 'incentives', 'what do i get', 'rockstars'],
+      answer: "You earn points for event participation: 100 for project managing, 50 for being a committee member, and 25 for on-site help. You can log these points via the 'Culture Guide Rockstars' workflow in the #cultureguides-global Slack channel to exchange for gifts and prizes quarterly.",
+      suggestedQuestions: ["What are the marquee events?", "What's the budget per person?", "Who is the lead for Chicago?"]
+    },
+    {
+      id: 6,
+      keywords: ['plan an event', 'plan event', 'event planning', 'where to start', 'local event'],
+      answer: "Start with the '[template] Event Planning Doc.pdf'. It's your main checklist. Remember to consider sustainability, partner with Equality Groups, and use the Employee Event Finder app for registration and feedback.",
+      suggestedQuestions: ["What are the sustainability rules?", "What's the budget per person?", "How do I get rewards points?"]
+    },
+    {
+      id: 7,
+      keywords: ['funding', 'budget', 'money', 'payment', 'p-card'],
+      answer: "The guideline is to keep events around $30 per person. You can request a budget via the Event Tracker form. Payments can be made with a P-Card (not your T&E Amex). Make sure your vendor accepts Amex or is in Coupa before requesting the budget.",
+      suggestedQuestions: ["How do I plan a sustainable event?", "Who is my hub lead?", "How do I get points for my event?"]
+    },
+    {
+      id: 8,
+      keywords: ['sustainability', 'sustainable', 'green event', 'eco-friendly'],
+      answer: "Sustainability is key! The 'Salesforce Event Sustainability Playbook' is your guide. Key tips: no single-use plastics, avoid beef and pork in catering, reuse banners, and ensure all swag is 'earned', not just given away. This means swag is a prize, not a handout.",
+      suggestedQuestions: ["What swag is not allowed?", "What are the marquee events?", "Who is the lead for Berlin?"]
+    },
+    {
+      id: 9,
+      keywords: ['swag', 'giveaways'],
+      answer: "All swag must be 'earned' as a prize, not just given away. It should be high-quality and sustainable. Items made of plastic, toys, and anything with a lithium-ion battery are not allowed.",
+      suggestedQuestions: ["What are the sustainability rules?", "How do I get points?", "What is the budget for events?"]
+    },
+    {
+      id: 10,
+      keywords: ['marquee events', 'global events'],
+      answer: "The four main global marquee events are Salesforce's Birthday, Salesforce Adventure Club (our 'bring your kids to work day'), Dreamforce activations, and Peace & Joy.",
+      suggestedQuestions: ["How do I plan a local event?", "Who is my hub lead?", "How do I get points?"]
+    },
+    {
+      id: 11,
+      keywords: ['slack', 'channel'],
+      answer: "The 'Culture Guide Slack Channels.pdf' has the full list. The main channel for all guides is #cultureguides-global. Hub-specific channels are usually named #cultureguides-[city/country code], like #cultureguides-in for India.",
+      suggestedQuestions: ["Who is the lead for the EMEA region?", "What are the marquee events?", "How do I get points?"]
+    },
+    {
+      id: 12,
+      keywords: ['meetingforce', 'register event', 'contract'],
+      answer: "You must use Meetingforce to register any event that involves 10 or more people AND requires a signed contract with an external vendor. This needs to be done at least 3 weeks before the contract's due date.",
+      suggestedQuestions: ["What is the Employee Event Finder?", "What's the budget per person?", "How do I pay for things?"]
+    },
+    {
+      id: 13,
+      keywords: ['event finder', 'registration', 'feedback'],
+      answer: "The Employee Event Finder app is your tool to manage event registrations, waitlists, and promotion. It also automatically sends a recommended survey to collect feedback from attendees after the event.",
+      suggestedQuestions: ["How do I use Meetingforce?", "What tags should I use for my event?", "What are the marquee events?"]
+    },
+    {
+      id: 14,
+      keywords: ['oktoberquest', 'octoberquest'],
+      answer: "OktoberQuest is an annual challenge to boost employee connection. Participants complete tasks like attending events, volunteering, and connecting with colleagues for a chance to win prizes, such as a VTO trip to South Africa or a tech carrying case.",
+      suggestedQuestions: ["What is the Agentforce AR App?", "How are guides rewarded?", "What are the marquee events?"]
+    },
+    {
+      id: 15,
+      keywords: ['agentforce', 'ar app'],
+      answer: "The Agentforce AR app is an augmented reality experience for events. It lets attendees take selfies with our agents and learn about the Agentforce story in an immersive way. It's a great tool for both employee and customer events.",
+      suggestedQuestions: ["What is OktoberQuest?", "How do I plan an event?", "Who is my hub lead?"]
+    },
+    {
+      id: 16,
+      keywords: ['thank you', 'thanks', 'bye', 'great'],
+      answer: "You're welcome! I'm here if you have any more questions. Happy to help!",
+      suggestedQuestions: []
+    }
+  ]
 
   useEffect(() => {
     // Fetch podcast data
@@ -137,6 +342,75 @@ export default function ResourcesPage() {
     }
   }
 
+  const getBotResponse = (input: string): BotResponse | null => {
+    const lowerCaseInput = input.toLowerCase()
+    const triggerWords = ['lead for', 'who is the lead', 'hub lead', 'contact for', 'program owner', 'global lead', 'regional lead']
+
+    if (triggerWords.some(word => lowerCaseInput.includes(word))) {
+      if (lowerCaseInput.includes('my hub')) {
+        return { 
+          type: 'follow-up', 
+          state: 'awaiting_hub_name', 
+          answer: "Happy to help! What city or hub are you in?", 
+          suggestedQuestions: [] 
+        }
+      }
+      
+      if (lowerCaseInput.includes('my region') || lowerCaseInput.includes('regional lead')) {
+        return { 
+          type: 'follow-up', 
+          state: 'awaiting_region_name', 
+          answer: "Of course! Which region are you in (AMER, EMEA, LATAM, APAC)?", 
+          suggestedQuestions: [] 
+        }
+      }
+      
+      if (lowerCaseInput.includes('global') || lowerCaseInput.includes('owner') || lowerCaseInput.includes('charge of the program')) {
+        return { 
+          answer: "The Culture Guide Program Owner is @Steph Doel (who is also the EMEA Lead).", 
+          suggestedQuestions: ["Who is the lead for my region?", "How are hub leads different?", "What are the marquee events?"] 
+        }
+      }
+
+      for (const region in regionLeads) {
+        if (lowerCaseInput.includes(region)) {
+          return { 
+            answer: `The Region Lead for ${region.toUpperCase()} is ${regionLeads[region]}.`, 
+            suggestedQuestions: ["Who is the lead for a specific city?", "What are the rewards for guides?", "How do I plan an event?"] 
+          }
+        }
+      }
+
+      for (const hub in hubLeads) {
+        if (lowerCaseInput.includes(hub)) {
+          const leadName = hubLeads[hub]
+          const verb = leadName.includes('&') || leadName.includes(',') ? 'are' : 'is'
+          let answer: string
+          
+          if (leadName === 'Lead Needed' || leadName.includes('(Lead Needed)')) {
+            answer = `A lead is currently needed for ${hub.charAt(0).toUpperCase() + hub.slice(1)}. If you're interested, you should reach out to your Region Lead.`
+          } else {
+            answer = `The hub lead(s) for ${hub.charAt(0).toUpperCase() + hub.slice(1)} ${verb} ${leadName}.`
+          }
+          
+          return { 
+            answer, 
+            suggestedQuestions: ["How do I get rewards points?", "What are the sustainability rules?"] 
+          }
+        }
+      }
+    }
+    
+    const foundItem = knowledgeBase.find(item => 
+      item.keywords.some(k => lowerCaseInput.includes(k))
+    )
+    
+    return foundItem ? {
+      answer: foundItem.answer,
+      suggestedQuestions: foundItem.suggestedQuestions
+    } : null
+  }
+
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!inputMessage.trim()) return
@@ -144,35 +418,38 @@ export default function ResourcesPage() {
     const userMessage = inputMessage
     setInputMessage("")
     setChatMessages((prev) => [...prev, { type: "user", message: userMessage }])
+    setAskedQuestions(prev => new Set(Array.from(prev).concat(userMessage.toLowerCase())))
     setIsTyping(true)
 
-    try {
-      const response = await fetch("/api/notebooklm", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ message: userMessage }),
-      })
-
-      const result = await response.json()
-
-      if (result.success) {
-        setChatMessages((prev) => [...prev, { type: "bot", message: result.response }])
-      } else {
-        throw new Error("Failed to get response")
-      }
-    } catch (error) {
-      setChatMessages((prev) => [
-        ...prev,
-        {
-          type: "bot",
-          message: "I'm sorry, I'm having trouble connecting right now. Please try again later.",
-        },
-      ])
-    } finally {
+    setTimeout(() => {
       setIsTyping(false)
-    }
+      let botResponse: BotResponse | null
+
+      if (conversationState === 'awaiting_hub_name') {
+        botResponse = getBotResponse(`who is the lead for ${userMessage}`)
+        setConversationState(null)
+      } else if (conversationState === 'awaiting_region_name') {
+        botResponse = getBotResponse(`who is the lead for ${userMessage} region`)
+        setConversationState(null)
+      } else {
+        botResponse = getBotResponse(userMessage)
+      }
+
+      if (botResponse) {
+        if (botResponse.type === 'follow-up') {
+          setConversationState(botResponse.state || null)
+        }
+        setChatMessages((prev) => [...prev, { type: "bot", message: botResponse.answer }])
+      } else {
+        setChatMessages((prev) => [
+          ...prev,
+          {
+            type: "bot",
+            message: "I'm sorry, I can only answer questions about the Culture Guide program. Try asking about event planning, rewards points, or who the lead is for a specific hub.",
+          },
+        ])
+      }
+    }, 1000)
   }
 
 
@@ -442,10 +719,10 @@ export default function ResourcesPage() {
                   <h4 className="text-sm font-medium text-slate-600 dark:text-slate-400">Quick questions to get started:</h4>
                   <div className="flex flex-wrap gap-2">
                     {[
-                      "How do I plan a culture event?",
-                      "What are the best engagement activities?", 
-                      "How to increase participation?",
-                      "What makes a successful culture initiative?"
+                      "What is the Culture Guides Program?",
+                      "Who is the Culture Guides Program Owner?",
+                      "Who is my hub lead?",
+                      "Who is my regional lead?"
                     ].map((suggestion, index) => (
                       <button
                         key={index}
