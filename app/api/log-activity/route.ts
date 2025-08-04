@@ -52,18 +52,30 @@ export async function POST(request: NextRequest) {
       notes,
     }
 
+    let loggedTo = 'local_storage' // Default for MVP
+    
     try {
       // Try Google Sheets if it's configured
       if (googleSheetsService.isGoogleSheetsConfigured()) {
         await googleSheetsService.logActivity(activityData)
         console.log('✅ Logged to Google Sheets')
+        loggedTo = 'google_sheets'
       } else {
-        throw new Error('Google Sheets not configured, using local storage')
+        console.log('ℹ️  Google Sheets not configured, using memory storage for MVP')
+        throw new Error('Google Sheets not configured, using memory storage')
       }
     } catch (error) {
-      console.log('⚠️  Google Sheets not available, using local storage:', error instanceof Error ? error.message : String(error))
-      // Fallback to local storage
-      await localStorageService.logActivity(activityData)
+      console.log('⚠️  Using memory storage:', error instanceof Error ? error.message : String(error))
+      
+      try {
+        // Fallback to memory storage
+        await localStorageService.logActivity(activityData)
+        console.log('✅ Successfully logged to memory storage')
+        loggedTo = 'memory_storage'
+      } catch (storageError) {
+        console.error('❌ Failed to log to memory storage:', storageError)
+        throw storageError
+      }
     }
 
     // Send Slack notification (optional)
@@ -140,6 +152,8 @@ export async function POST(request: NextRequest) {
       success: true,
       message: "Activity logged successfully!",
       points,
+      storage: loggedTo,
+      timestamp: new Date().toISOString()
     })
   } catch (error) {
     console.error("Error logging activity:", error)

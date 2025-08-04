@@ -1,25 +1,35 @@
 import { NextResponse } from "next/server"
-import fs from 'fs'
-import path from 'path'
+import { localStorageService } from "@/lib/local-storage"
 
-const DATA_FILE = path.join(process.cwd(), 'data', 'activities.json')
-
-export async function DELETE() {
+export async function POST() {
   try {
-    // Check if the file exists and delete it
-    if (fs.existsSync(DATA_FILE)) {
-      fs.unlinkSync(DATA_FILE)
-      console.log('✅ Activities data cleared successfully')
-    }
-
+    await localStorageService.clearAllData()
+    
     return NextResponse.json({
       success: true,
-      message: 'All activity data has been cleared successfully'
+      message: "All activity data cleared successfully!"
     })
   } catch (error) {
-    console.error('❌ Error clearing data:', error)
+    console.error("Error clearing data:", error)
     return NextResponse.json(
-      { error: 'Failed to clear data' },
+      { error: "Failed to clear data" },
+      { status: 500 }
+    )
+  }
+}
+
+export async function GET() {
+  try {
+    const stats = await localStorageService.getStats()
+    
+    return NextResponse.json({
+      success: true,
+      stats
+    })
+  } catch (error) {
+    console.error("Error getting stats:", error)
+    return NextResponse.json(
+      { error: "Failed to get stats" },
       { status: 500 }
     )
   }

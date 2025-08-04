@@ -132,12 +132,14 @@ npm run preview           # Build and preview locally
 ## 📊 MVP vs Enhanced Mode
 
 ### MVP Mode (Default - No Environment Variables)
-- ✅ Full app functionality with local storage
-- ✅ Activity logging and tracking
+- ✅ Full app functionality with memory storage
+- ✅ Activity logging and tracking  
 - ✅ Leaderboard and dashboard
 - ✅ All UI features work perfectly
-- ✅ Data persists during user session
-- ⚪ Data resets on browser refresh/new session
+- ✅ Data persists during server session
+- ✅ Perfect for testing, demos, and initial deployment
+- ⚪ Data resets when Vercel functions restart (cold starts)
+- ⚪ Includes demo data to show functionality immediately
 
 ### Enhanced Mode (Optional Environment Variables)
 - ✅ All MVP features PLUS:

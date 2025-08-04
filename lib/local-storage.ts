@@ -1,6 +1,3 @@
-import fs from 'fs'
-import path from 'path'
-
 interface ActivityData {
   name: string
   slackHandle: string
@@ -13,68 +10,66 @@ interface ActivityData {
   id?: string
 }
 
-const DATA_FILE = path.join(process.cwd(), 'data', 'activities.json')
-
-// Ensure data directory exists
-function ensureDataDirectory() {
-  const dataDir = path.dirname(DATA_FILE)
-  if (!fs.existsSync(dataDir)) {
-    fs.mkdirSync(dataDir, { recursive: true })
-  }
-}
+// In-memory storage for Vercel serverless environment
+// Note: Data will reset between function cold starts - perfect for MVP testing
+let activitiesCache: ActivityData[] = []
 
 export class LocalStorageService {
+  constructor() {
+    // Initialize with some demo data for MVP
+    if (activitiesCache.length === 0) {
+      activitiesCache = [
+        {
+          id: 'demo-1',
+          name: 'Demo User',
+          slackHandle: '@demo.user',
+          role: 'project-manager',
+          eventName: 'Culture Connect Demo Event',
+          eventDate: new Date().toISOString().split('T')[0],
+          points: 100,
+          notes: 'Demo activity for testing',
+          timestamp: new Date().toISOString()
+        }
+      ]
+    }
+  }
+
   async logActivity(data: ActivityData): Promise<void> {
     try {
-      ensureDataDirectory()
-      
       const activity = {
         ...data,
         id: generateId(),
         timestamp: new Date().toISOString(),
       }
 
-      // Read existing data
-      let activities: ActivityData[] = []
-      if (fs.existsSync(DATA_FILE)) {
-        const fileContent = fs.readFileSync(DATA_FILE, 'utf-8')
-        activities = JSON.parse(fileContent)
-      }
-
-      // Add new activity
-      activities.unshift(activity) // Add to beginning for latest first
-
-      // Write back to file
-      fs.writeFileSync(DATA_FILE, JSON.stringify(activities, null, 2))
+      // Add new activity to beginning of array (latest first)
+      activitiesCache.unshift(activity)
       
-      console.log('✅ Activity logged to local storage:', activity.eventName)
+      // Keep only last 1000 activities to prevent memory issues
+      if (activitiesCache.length > 1000) {
+        activitiesCache = activitiesCache.slice(0, 1000)
+      }
+      
+      console.log('✅ Activity logged to memory storage:', activity.eventName)
+      console.log('📊 Total activities in cache:', activitiesCache.length)
     } catch (error) {
-      console.error('❌ Error logging to local storage:', error)
-      throw new Error('Failed to log activity to local storage')
+      console.error('❌ Error logging to memory storage:', error)
+      throw new Error('Failed to log activity to memory storage')
     }
   }
 
   async getActivities(limit: number = 100): Promise<ActivityData[]> {
     try {
-      ensureDataDirectory()
-      
-      if (!fs.existsSync(DATA_FILE)) {
-        return []
-      }
-
-      const fileContent = fs.readFileSync(DATA_FILE, 'utf-8')
-      const activities = JSON.parse(fileContent)
-      
-      return activities.slice(0, limit)
+      return activitiesCache.slice(0, limit)
     } catch (error) {
-      console.error('❌ Error reading from local storage:', error)
+      console.error('❌ Error reading from memory storage:', error)
       return []
     }
   }
 
   async getLeaderboard(): Promise<any[]> {
     try {
-      const activities = await this.getActivities(1000) // Get more for accurate leaderboard
+      const activities = activitiesCache // Use all activities for leaderboard
       
       // Group by name and calculate total points
       const leaderboard = activities.reduce((acc: any, activity) => {
@@ -88,7 +83,7 @@ export class LocalStorageService {
             slackHandle: activity.slackHandle
           }
         }
-        acc[name].points += activity.points
+        acc[name].points += activity.points || 0
         acc[name].activities += 1
         
         return acc
@@ -104,33 +99,26 @@ export class LocalStorageService {
     }
   }
 
-  async exportToCSV(): Promise<string> {
+  async clearAllData(): Promise<void> {
     try {
-      const activities = await this.getActivities(1000)
-      
-      const headers = ['Timestamp', 'Name', 'Slack Handle', 'Role', 'Event Name', 'Event Date', 'Points', 'Notes']
-      const rows = activities.map(activity => [
-        activity.timestamp || '',
-        activity.name,
-        activity.slackHandle,
-        activity.role,
-        activity.eventName,
-        activity.eventDate,
-        activity.points.toString(),
-        activity.notes || ''
-      ])
-
-      const csvContent = [headers, ...rows]
-        .map(row => row.map(field => `"${field}"`).join(','))
-        .join('\n')
-
-      const csvFile = path.join(process.cwd(), 'data', 'activities_export.csv')
-      fs.writeFileSync(csvFile, csvContent)
-      
-      return csvFile
+      activitiesCache = []
+      console.log('✅ All data cleared from memory storage')
     } catch (error) {
-      console.error('❌ Error exporting to CSV:', error)
-      throw new Error('Failed to export activities to CSV')
+      console.error('❌ Error clearing data:', error)
+      throw new Error('Failed to clear data')
+    }
+  }
+
+  async getStats(): Promise<{ totalActivities: number, totalPoints: number, uniqueUsers: number }> {
+    try {
+      const totalActivities = activitiesCache.length
+      const totalPoints = activitiesCache.reduce((sum, activity) => sum + (activity.points || 0), 0)
+      const uniqueUsers = new Set(activitiesCache.map(activity => activity.name)).size
+      
+      return { totalActivities, totalPoints, uniqueUsers }
+    } catch (error) {
+      console.error('❌ Error getting stats:', error)
+      return { totalActivities: 0, totalPoints: 0, uniqueUsers: 0 }
     }
   }
 }
