@@ -1,6 +1,4 @@
 import { google } from 'googleapis'
-import * as fs from 'fs'
-import * as path from 'path'
 
 interface ActivityData {
   name: string
@@ -17,10 +15,35 @@ interface ServiceAccountCredentials {
   private_key: string
 }
 
+/**
+ * Loads Google Sheets credentials from environment variables only.
+ * Supports two patterns:
+ *   1. GOOGLE_SERVICE_ACCOUNT_JSON — paste the full service account JSON string (recommended for Vercel)
+ *   2. GOOGLE_SHEETS_CLIENT_EMAIL + GOOGLE_SHEETS_PRIVATE_KEY — individual fields
+ */
 function loadCredentials(): { credentials: ServiceAccountCredentials; spreadsheetId: string } | null {
   const spreadsheetId = process.env.GOOGLE_SHEETS_SHEET_ID
   if (!spreadsheetId) return null
 
+  // Option 1: Full JSON string (recommended for Vercel — paste the whole service account JSON)
+  if (process.env.GOOGLE_SERVICE_ACCOUNT_JSON) {
+    try {
+      const parsed = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON)
+      if (parsed.client_email && parsed.private_key) {
+        return {
+          credentials: {
+            client_email: parsed.client_email,
+            private_key: parsed.private_key.replace(/\\n/g, '\n'),
+          },
+          spreadsheetId,
+        }
+      }
+    } catch (e) {
+      console.error('Failed to parse GOOGLE_SERVICE_ACCOUNT_JSON:', e)
+    }
+  }
+
+  // Option 2: Individual env vars
   if (process.env.GOOGLE_SHEETS_CLIENT_EMAIL && process.env.GOOGLE_SHEETS_PRIVATE_KEY) {
     return {
       credentials: {
@@ -29,32 +52,6 @@ function loadCredentials(): { credentials: ServiceAccountCredentials; spreadshee
       },
       spreadsheetId,
     }
-  }
-
-  const credentialsPath =
-    process.env.GOOGLE_SHEETS_CREDENTIALS_PATH ||
-    path.join(process.cwd(), 'google-service-account.json')
-
-  try {
-    if (fs.existsSync(credentialsPath)) {
-      const json = fs.readFileSync(credentialsPath, 'utf-8')
-      const parsed = JSON.parse(json)
-
-      if (parsed.type !== 'service_account' || !parsed.client_email || !parsed.private_key) {
-        console.error('Invalid service account JSON: must have type, client_email, and private_key')
-        return null
-      }
-
-      return {
-        credentials: {
-          client_email: parsed.client_email,
-          private_key: parsed.private_key.replace(/\\n/g, '\n'),
-        },
-        spreadsheetId,
-      }
-    }
-  } catch (e) {
-    console.error('Failed to load Google credentials from file:', e)
   }
 
   return null
