@@ -73,7 +73,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                   </span>
                 </h1>
 
-                <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-400 max-w-3xl mx-auto leading-relaxed px-2">
+                <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-white max-w-3xl mx-auto leading-relaxed px-2">
                   Log activities . Earn points . Lead change
                 </p>
               </div>
@@ -99,7 +99,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                     />
                     
                     {/* Key border effect */}
-                    <div className="absolute inset-0 border-2 border-white/30 rounded-xl group-hover:border-white/50 transition-colors duration-300" />
+                    <div className="absolute inset-0 left-auto top-auto border-2 border-white/30 rounded-xl group-hover:border-white/50 transition-colors duration-300" />
                     
                     {/* Button content */}
                     <div className="relative z-10 flex items-center justify-center">
@@ -123,12 +123,12 @@ export default function HomePage({ onNavigate }: HomePageProps) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2 }}
         >
-          <Card className="liquid-glass border border-blue-500/20 shadow-2xl p-4 sm:p-6 md:p-8 lg:p-12 bg-card/80 dark:bg-card/70 backdrop-blur-md">
+          <Card className="liquid-glass border border-gray-200 dark:border-blue-500/20 shadow-2xl p-4 sm:p-6 md:p-8 lg:p-12 bg-white/90 dark:bg-card/70 backdrop-blur-md">
             <CardHeader className="text-center space-y-4">
               <CardTitle className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-orange-500 to-pink-500 bg-clip-text text-transparent">
                 How It Works
               </CardTitle>
-              <CardDescription className="text-base sm:text-lg md:text-xl max-w-2xl mx-auto text-muted-foreground px-2">
+              <CardDescription className="text-base sm:text-lg md:text-xl max-w-2xl mx-auto text-gray-600 dark:text-gray-400 px-2">
                 Earn points by participating in cultural events and initiatives. Your contributions make a huge
                 difference!
               </CardDescription>
@@ -144,7 +144,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                     transition={{ duration: 0.6, delay: 0.1 * index }}
                     whileHover={{ y: -10 }}
                   >
-                    <Card className="liquid-glass border border-blue-500/10 shadow-xl p-4 sm:p-6 md:p-8 text-center group hover:shadow-2xl transition-all duration-500 bg-card/80 dark:bg-card/70 backdrop-blur-md hover:border-blue-400/30">
+                    <Card className="liquid-glass border border-gray-200 dark:border-blue-500/10 shadow-xl p-4 sm:p-6 md:p-8 text-center group hover:shadow-2xl transition-all duration-500 bg-white/90 dark:bg-card/70 backdrop-blur-md hover:border-gray-300 dark:hover:border-blue-400/30">
                       <CardContent className="pt-6 space-y-6">
                         {/* Icon */}
                         <div
@@ -168,13 +168,13 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                           <div className="text-4xl sm:text-5xl md:text-6xl font-bold bg-gradient-to-r from-orange-500 to-pink-500 bg-clip-text text-transparent">
                             {activity.points}
                           </div>
-                          <div className="text-sm font-bold text-muted-foreground tracking-wider">POINTS</div>
+                          <div className="text-sm font-bold text-gray-500 dark:text-gray-400 tracking-wider">POINTS</div>
                         </div>
 
                         {/* Content */}
                         <div className="space-y-3">
-                          <h3 className="text-lg sm:text-xl md:text-2xl font-bold">{activity.role}</h3>
-                          <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">{activity.description}</p>
+                          <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 dark:text-white">{activity.role}</h3>
+                          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 leading-relaxed">{activity.description}</p>
                         </div>
                       </CardContent>
                     </Card>

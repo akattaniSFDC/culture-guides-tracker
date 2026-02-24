@@ -229,10 +229,10 @@ export default function CultureGuidesApp() {
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-background">
+    <div className="min-h-screen relative overflow-hidden">
       <Header activeTab={activeTab} onTabChange={setActiveTab} />
 
-      <main className="relative z-10 bg-background">
+      <main className="relative z-10">
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}

@@ -3,6 +3,9 @@
  * This ensures required environment variables are present at runtime
  */
 
+import * as fs from 'fs'
+import * as path from 'path'
+
 interface EnvConfig {
   // Google Sheets Integration
   GOOGLE_SHEETS_CLIENT_EMAIL?: string
@@ -49,14 +52,18 @@ export function validateEnvironmentVariables(): EnvConfig {
   }
 
   // Check if Google Sheets is partially configured (warn about incomplete setup)
-  const googleSheetsVars = ['GOOGLE_SHEETS_CLIENT_EMAIL', 'GOOGLE_SHEETS_PRIVATE_KEY', 'GOOGLE_SHEETS_SHEET_ID']
-  const configuredGoogleSheets = googleSheetsVars.filter(varName => process.env[varName])
-  
-  if (configuredGoogleSheets.length > 0 && configuredGoogleSheets.length < googleSheetsVars.length) {
-    console.warn(
-      `⚠️  Google Sheets partially configured. Missing: ${googleSheetsVars.filter(v => !process.env[v]).join(', ')}\n` +
-      'Google Sheets integration will be disabled. Configure all three variables to enable it.'
-    )
+  // Two valid configs: (1) env vars: CLIENT_EMAIL + PRIVATE_KEY + SHEET_ID, or (2) SHEET_ID + JSON file
+  const hasEnvCreds = process.env.GOOGLE_SHEETS_CLIENT_EMAIL && process.env.GOOGLE_SHEETS_PRIVATE_KEY
+  const hasSheetId = !!process.env.GOOGLE_SHEETS_SHEET_ID
+  if (hasSheetId && !hasEnvCreds) {
+    // May be using JSON file - no warning needed
+  } else if (hasSheetId || hasEnvCreds) {
+    const missing = []
+    if (!hasSheetId) missing.push('GOOGLE_SHEETS_SHEET_ID')
+    if (!hasEnvCreds) missing.push('GOOGLE_SHEETS_CLIENT_EMAIL and GOOGLE_SHEETS_PRIVATE_KEY (or use google-service-account.json)')
+    if (missing.length > 0) {
+      console.warn(`⚠️  Google Sheets partially configured. Missing: ${missing.join(', ')}`)
+    }
   }
 
   return {
@@ -79,7 +86,11 @@ export function getEnvironmentInfo() {
     env,
     isProduction,
     isDevelopment,
-    hasGoogleSheets: !!(process.env.GOOGLE_SHEETS_CLIENT_EMAIL && process.env.GOOGLE_SHEETS_PRIVATE_KEY),
+    hasGoogleSheets: !!(process.env.GOOGLE_SHEETS_CLIENT_EMAIL && process.env.GOOGLE_SHEETS_PRIVATE_KEY) ||
+      !!(process.env.GOOGLE_SHEETS_SHEET_ID && (
+        process.env.GOOGLE_SHEETS_CREDENTIALS_PATH ||
+        fs.existsSync(path.join(process.cwd(), 'google-service-account.json'))
+      )),
     hasSlack: !!(process.env.SLACK_BOT_TOKEN && process.env.SLACK_CHANNEL_ID),
     hasGoogleDrive: !!process.env.GOOGLE_DRIVE_API_KEY,
     hasNotebookLM: !!process.env.NOTEBOOKLM_API_ENDPOINT,

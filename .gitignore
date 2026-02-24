@@ -4,4 +4,5 @@ node_modules/
 .env.local
 .env.production.local
 .env.development.local
+google-service-account.json
 *.log

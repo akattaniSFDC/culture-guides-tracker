@@ -171,9 +171,9 @@ export default function LogActivityPage({ onNavigate }: LogActivityPageProps) {
               </div>
 
               {submissionResult && (
-                <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 space-y-2">
+                <div className="bg-gray-100 dark:bg-white/10 backdrop-blur-sm rounded-2xl p-6 space-y-2">
                   <p className="text-2xl font-bold text-orange-500">+{submissionResult.points} Points Earned! 🌟</p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
                     Thank you for your contribution! Your manager has been notified and points are added towards your rockstar points.
                   </p>
                 </div>
@@ -207,17 +207,17 @@ export default function LogActivityPage({ onNavigate }: LogActivityPageProps) {
           <h1 className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-orange-500 to-pink-500 bg-clip-text text-transparent tracking-tight">
             Log Your Activity
           </h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+          <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto leading-relaxed">
             Share your cultural contributions and earn points for making Salesforce an amazing place to work!
           </p>
         </div>
 
         {/* Form */}
-        <Card className="liquid-glass border border-blue-500/20 shadow-2xl p-8 md:p-12 bg-card/80 dark:bg-card/70 backdrop-blur-md">
+        <Card className="liquid-glass border border-gray-200 dark:border-blue-500/20 shadow-2xl p-8 md:p-12 bg-white/90 dark:bg-card/70 backdrop-blur-md">
           <form onSubmit={handleSubmit} className="space-y-10">
             {/* Role Selection */}
             <div className="space-y-6">
-              <label className="block text-2xl font-bold text-center">Choose Your Participation Role</label>
+              <label className="block text-2xl font-bold text-center text-gray-900 dark:text-white">Choose Your Participation Role</label>
               <div className="grid md:grid-cols-3 gap-6">
                 {activityTypes.map((activity, index) => (
                   <motion.label
@@ -228,7 +228,7 @@ export default function LogActivityPage({ onNavigate }: LogActivityPageProps) {
                     className={`relative p-8 border-2 rounded-3xl cursor-pointer transition-all duration-300 group ${
                       formData.role === activity.id
                         ? "border-orange-500 bg-gradient-to-br from-orange-500/10 to-pink-500/10 shadow-2xl scale-105"
-                        : "border-white/20 hover:border-orange-300 hover:shadow-xl hover:scale-102"
+                        : "border-gray-200 dark:border-white/20 hover:border-orange-300 dark:hover:border-orange-300 hover:shadow-xl hover:scale-102 bg-white/60 dark:bg-transparent"
                     }`}
                     whileHover={{ y: -5 }}
                   >
@@ -253,12 +253,12 @@ export default function LogActivityPage({ onNavigate }: LogActivityPageProps) {
 
                       <div className="space-y-2">
                         <div className="text-4xl font-bold text-orange-500">{activity.points}</div>
-                        <div className="text-xs font-bold text-muted-foreground tracking-wider">POINTS</div>
+                        <div className="text-xs font-bold text-gray-500 dark:text-gray-400 tracking-wider">POINTS</div>
                       </div>
 
                       <div className="space-y-2">
-                        <h3 className="text-xl font-bold">{activity.role}</h3>
-                        <p className="text-sm text-muted-foreground">{activity.description}</p>
+                        <h3 className="text-xl font-bold text-gray-900 dark:text-white">{activity.role}</h3>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">{activity.description}</p>
                       </div>
                     </div>
 
@@ -280,7 +280,7 @@ export default function LogActivityPage({ onNavigate }: LogActivityPageProps) {
             {/* Form Fields */}
             <div className="grid md:grid-cols-2 gap-8">
               <div className="space-y-3">
-                <label htmlFor="eventName" className="block text-lg font-semibold">
+                <label htmlFor="eventName" className="block text-lg font-semibold text-gray-900 dark:text-white">
                   Event Name *
                 </label>
                 <Input
@@ -290,15 +290,15 @@ export default function LogActivityPage({ onNavigate }: LogActivityPageProps) {
                   value={formData.eventName}
                   onChange={handleChange}
                   placeholder="e.g., Salesforce Adventure Club"
-                  className={`h-14 text-lg liquid-glass border-2 transition-all duration-300 ${
-                    errors.eventName ? "border-red-500" : "border-white/20 focus:border-orange-500"
+                  className={`h-14 text-lg border-2 transition-all duration-300 bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 ${
+                    errors.eventName ? "border-red-500" : "border-gray-300 dark:border-white/20 focus:border-orange-500"
                   }`}
                 />
                 {errors.eventName && <p className="text-red-500 text-sm">{errors.eventName}</p>}
               </div>
 
               <div className="space-y-3">
-                <label htmlFor="eventDate" className="block text-lg font-semibold">
+                <label htmlFor="eventDate" className="block text-lg font-semibold text-gray-900 dark:text-white">
                   Event Date *
                 </label>
                 <Input
@@ -307,15 +307,15 @@ export default function LogActivityPage({ onNavigate }: LogActivityPageProps) {
                   name="eventDate"
                   value={formData.eventDate}
                   onChange={handleChange}
-                  className={`h-14 text-lg liquid-glass border-2 transition-all duration-300 ${
-                    errors.eventDate ? "border-red-500" : "border-white/20 focus:border-orange-500"
+                  className={`h-14 text-lg border-2 transition-all duration-300 bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white ${
+                    errors.eventDate ? "border-red-500" : "border-gray-300 dark:border-white/20 focus:border-orange-500"
                   }`}
                 />
                 {errors.eventDate && <p className="text-red-500 text-sm">{errors.eventDate}</p>}
               </div>
 
               <div className="space-y-3">
-                <label htmlFor="name" className="block text-lg font-semibold">
+                <label htmlFor="name" className="block text-lg font-semibold text-gray-900 dark:text-white">
                   Your Name *
                 </label>
                 <Input
@@ -325,15 +325,15 @@ export default function LogActivityPage({ onNavigate }: LogActivityPageProps) {
                   value={formData.name}
                   onChange={handleChange}
                   placeholder="John Doe"
-                  className={`h-14 text-lg liquid-glass border-2 transition-all duration-300 ${
-                    errors.name ? "border-red-500" : "border-white/20 focus:border-orange-500"
+                  className={`h-14 text-lg border-2 transition-all duration-300 bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 ${
+                    errors.name ? "border-red-500" : "border-gray-300 dark:border-white/20 focus:border-orange-500"
                   }`}
                 />
                 {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
               </div>
 
               <div className="space-y-3">
-                <label htmlFor="slackHandle" className="block text-lg font-semibold">
+                <label htmlFor="slackHandle" className="block text-lg font-semibold text-gray-900 dark:text-white">
                   Slack Handle *
                 </label>
                 <Input
@@ -343,8 +343,8 @@ export default function LogActivityPage({ onNavigate }: LogActivityPageProps) {
                   value={formData.slackHandle}
                   onChange={handleChange}
                   placeholder="@john.doe"
-                  className={`h-14 text-lg liquid-glass border-2 transition-all duration-300 ${
-                    errors.slackHandle ? "border-red-500" : "border-white/20 focus:border-orange-500"
+                  className={`h-14 text-lg border-2 transition-all duration-300 bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 ${
+                    errors.slackHandle ? "border-red-500" : "border-gray-300 dark:border-white/20 focus:border-orange-500"
                   }`}
                 />
                 {errors.slackHandle && <p className="text-red-500 text-sm">{errors.slackHandle}</p>}
@@ -352,7 +352,7 @@ export default function LogActivityPage({ onNavigate }: LogActivityPageProps) {
             </div>
 
             <div className="space-y-3">
-              <label htmlFor="notes" className="block text-lg font-semibold">
+              <label htmlFor="notes" className="block text-lg font-semibold text-gray-900 dark:text-white">
                 Additional Notes
               </label>
               <Textarea
@@ -362,20 +362,20 @@ export default function LogActivityPage({ onNavigate }: LogActivityPageProps) {
                 value={formData.notes}
                 onChange={handleChange}
                 placeholder="Share more details about your contribution..."
-                className="text-lg liquid-glass border-2 border-white/20 focus:border-orange-500 transition-all duration-300"
+                className="text-lg border-2 border-gray-300 dark:border-white/20 focus:border-orange-500 transition-all duration-300 bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
               />
             </div>
 
-            <div className="flex items-center space-x-4 p-6 liquid-glass rounded-2xl">
+            <div className="flex items-center space-x-4 p-6 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl">
               <input
                 id="notifyManager"
                 name="notifyManager"
                 type="checkbox"
                 checked={formData.notifyManager}
                 onChange={handleChange}
-                className="w-6 h-6 rounded border-gray-300 text-orange-500 focus:ring-orange-500"
+                className="w-6 h-6 rounded border-gray-300 dark:border-gray-600 text-orange-500 focus:ring-orange-500"
               />
-              <label htmlFor="notifyManager" className="text-lg font-medium">
+              <label htmlFor="notifyManager" className="text-lg font-medium text-gray-900 dark:text-white">
                 📧 Notify my manager about this contribution
               </label>
             </div>

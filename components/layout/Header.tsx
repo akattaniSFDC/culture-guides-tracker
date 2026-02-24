@@ -21,7 +21,7 @@ const navItems = [
 
 export default function Header({ activeTab, onTabChange }: HeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const { theme, setTheme } = useTheme()
+  const { setTheme, resolvedTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
 
   // Only render theme-dependent content after mounting to avoid hydration mismatches
@@ -91,7 +91,7 @@ export default function Header({ activeTab, onTabChange }: HeaderProps) {
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                    onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
                     className="rounded-xl bg-gray-100/80 dark:bg-gray-800/50 hover:bg-gray-200/80 dark:hover:bg-gray-700/50 hidden sm:flex border-0 shadow-sm"
                   >
                     <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0 text-gray-700 dark:text-gray-300" />
@@ -164,7 +164,7 @@ export default function Header({ activeTab, onTabChange }: HeaderProps) {
                 >
                   <Button
                     variant="ghost"
-                    onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                    onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
                     className="w-full justify-start rounded-xl text-sm sm:text-base font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100/80 dark:hover:bg-gray-800/50 sm:hidden transition-all duration-300"
                   >
                     <div className="flex items-center">

@@ -73,26 +73,26 @@ const GlareHover: React.FC<GlareHoverProps> = ({
     pointerEvents: 'none',
     zIndex: 10,
     transform: `skew(${glareAngle}deg)`,
-    borderRadius: 'inherit',
-    overflow: 'hidden',
   }
 
   return (
     <div
       ref={containerRef}
-      className={`relative inline-block overflow-hidden ${className}`}
+      className={`relative inline-block ${className}`}
       onMouseEnter={handleMouseEnter}
       style={{ 
         position: 'relative',
         display: 'inline-block',
-        borderRadius: 'inherit',
       }}
     >
       {children}
-      <div
-        ref={glareRef}
-        style={glareStyle}
-      />
+      {/* Clip wrapper ensures the skewed glare doesn't spill past rounded corners */}
+      <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', borderRadius: 'inherit', pointerEvents: 'none', zIndex: 10 }}>
+        <div
+          ref={glareRef}
+          style={glareStyle}
+        />
+      </div>
     </div>
   )
 }

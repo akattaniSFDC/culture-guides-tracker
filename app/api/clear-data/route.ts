@@ -1,14 +1,21 @@
-import { NextResponse } from "next/server"
+import { type NextRequest, NextResponse } from "next/server"
 import { localStorageService } from "@/lib/local-storage"
+import { googleSheetsService } from "@/lib/google-sheets"
 
-// Support both DELETE and POST methods for clear data
-export async function DELETE() {
+export async function DELETE(request: NextRequest) {
   try {
+    const quarter = request.nextUrl.searchParams.get('quarter') || undefined
+
+    if (googleSheetsService.isGoogleSheetsConfigured()) {
+      await googleSheetsService.clearSheet(quarter)
+      console.log(`✅ Cleared Google Sheets data for ${quarter || 'current quarter'}`)
+    }
+
     await localStorageService.clearAllData()
-    
+
     return NextResponse.json({
       success: true,
-      message: "All activity data cleared successfully!"
+      message: `Activity data cleared successfully for ${quarter || 'current quarter'}!`
     })
   } catch (error) {
     console.error("Error clearing data:", error)
@@ -19,13 +26,25 @@ export async function DELETE() {
   }
 }
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   try {
+    let quarter: string | undefined
+    try {
+      const body = await request.json()
+      quarter = body.quarter
+    } catch {
+      // No body or invalid JSON is fine
+    }
+
+    if (googleSheetsService.isGoogleSheetsConfigured()) {
+      await googleSheetsService.clearSheet(quarter)
+    }
+
     await localStorageService.clearAllData()
-    
+
     return NextResponse.json({
       success: true,
-      message: "All activity data cleared successfully!"
+      message: `Activity data cleared successfully for ${quarter || 'current quarter'}!`
     })
   } catch (error) {
     console.error("Error clearing data:", error)
@@ -39,7 +58,7 @@ export async function POST() {
 export async function GET() {
   try {
     const stats = await localStorageService.getStats()
-    
+
     return NextResponse.json({
       success: true,
       stats
