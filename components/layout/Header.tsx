@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Menu, X, Sun, Moon } from "lucide-react"
 import { useTheme } from "next-themes"
 import Image from "next/image"
+import { UserButton, SignedIn, SignedOut, SignInButton } from "@clerk/nextjs"
 
 interface HeaderProps {
   activeTab: string
@@ -100,6 +101,27 @@ export default function Header({ activeTab, onTabChange }: HeaderProps) {
                   </Button>
                 </motion.div>
               )}
+
+              {/* User Auth */}
+              <SignedIn>
+                <UserButton
+                  appearance={{
+                    elements: {
+                      avatarBox: "w-9 h-9 rounded-xl ring-2 ring-orange-400/50 hover:ring-orange-400 transition-all",
+                    },
+                  }}
+                />
+              </SignedIn>
+              <SignedOut>
+                <SignInButton mode="modal">
+                  <Button
+                    size="sm"
+                    className="rounded-xl bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white font-medium shadow-sm hidden sm:flex"
+                  >
+                    Sign In
+                  </Button>
+                </SignInButton>
+              </SignedOut>
 
               {/* Mobile Menu Button */}
               <div className="lg:hidden">
